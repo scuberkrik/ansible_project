@@ -1,0 +1,13 @@
+- name: Получение ключей
+  include_tasks: tasks/fetch.yml
+  tags:
+    - fetch
+- name: Добавление ключей
+  include_tasks: tasks/add.yml
+  tags:
+    - add
+- name: Удаление ключей
+  include_tasks: tasks/rm.yml
+  when: "'rm' in ansible_run_tags"
+  tags:
+    - del

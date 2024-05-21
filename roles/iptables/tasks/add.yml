@@ -1,0 +1,49 @@
+---
+- name: Добавление правил для ssh подключений
+  iptables:
+    table: filter
+    chain: INPUT
+    protocol: tcp
+    source: "{{ runner }}"
+    destination_port: "22"
+    jump: ACCEPT
+    state: present
+- name: Добавление правил для синхронизации
+  when: inventory_hostname in groups['apps']
+  iptables:
+    table: filter
+    chain: INPUT
+    protocol: tcp
+    source: "{{ item }}"
+    destination_port: "22"
+    jump: ACCEPT
+    state: present
+  with_items:
+    - "{{ wp1_host }}"
+    - "{{ wp2_host }}"
+- name: Запретить весь трафик с балансировщика на сервер базы данных
+  when: inventory_hostname in groups['monitoring']
+  iptables:
+    chain: "{{ item }}"
+    protocol: all
+    source: 0.0.0.0
+    destination: "{{ db_host }}"
+    jump: DROP
+    state: absent
+  with_items:
+    - OUTPUT
+    - INPUT
+- name: Запретить входящие соединения ssh
+  iptables:
+    table: filter
+    chain: INPUT
+    protocol: tcp
+    destination_port: "22"
+    jump: DROP
+    state: present
+- name: Сохранить
+  community.general.iptables_state:
+    state: saved
+    path: /etc/sysconfig/iptables
+
+

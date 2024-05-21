@@ -1,0 +1,102 @@
+---
+# tasks file for roles/template-role
+# --- Проверка установки
+
+- name: Проверяем установлена ли MySQL
+  stat: path=/etc/init.d/mysql
+  register: mysql_installed
+
+# --- Начальная установка
+
+- name: Обновление (apt update)
+  apt:
+    update_cache: yes
+  when: not mysql_installed.stat.exists
+
+- name: Установка MySQL и компонент
+  package:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  loop:
+    - mysql-server
+    - mysql-client
+    - mysql-common
+    - python3-mysqldb
+  become: yes
+  when: not mysql_installed.stat.exists
+
+- name: Старт сервиса MySQL
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+  when: not mysql_installed.stat.exists
+
+# --- Проверка соединения
+
+- name: Проверка соединения с параметрами по умолчанию
+  mysql_variables: login_user=root login_password='' variable=version
+  register: mysql_version
+  ignore_errors: yes
+  when: not mysql_installed.stat.exists
+
+- name: Удалённый доступ к mysql
+  lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regex: '^bind-address\s*=\s*127.0.0.1'
+    line: 'bind-address = 0.0.0.0'
+    backup: yes
+  notify:
+    - restart mysql
+  when: not mysql_installed.stat.exists
+
+# --- Создание УЗ
+
+- name: Задаём root пароль
+  mysql_user:
+    name: root
+    password: "{{ root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    host: localhost
+    login_user: root
+    login_password: ''
+    state: present
+  when: not mysql_installed.stat.exists
+
+- name: Создаём администратора БД
+  mysql_user:
+    name: "{{ admin_user }}"
+    password: "{{ admin_password }}"
+    priv: '*.*:ALL'
+    host: '%'
+    append_privs: yes
+    login_user: root
+    login_password: "{{ root_password }}"
+    state: present
+  when: not mysql_installed.stat.exists
+
+- name: Создаём пользователя WP
+  mysql_user:
+    name: "{{ wp_db_user }}"
+    password: "{{ wp_db_password }}"
+    priv: '*.*:ALL'
+    host: '%'
+    append_privs: yes
+    login_user: root
+    login_password: "{{ root_password }}"
+    state: present
+  when: not mysql_installed.stat.exists
+
+# --- Создание БД
+
+- name: Создаём БД WP
+  mysql_db:
+    name: "{{ wp_db_name }}"
+    login_user: root
+    login_password: "{{ root_password }}"
+    state: present
+  when: not mysql_installed.stat.exists
+
+# --- Мониторинг Zabbix
+- include_tasks: zabbix_mon.yml

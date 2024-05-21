@@ -1,0 +1,115 @@
+---
+- name: Установить ключ репозитория Zabbix
+  apt_key:
+    url: https://repo.zabbix.com/zabbix-official-repo.key
+    state: present
+- name: Добавить репозиторий Zabbix APT
+  apt_repository:
+    repo: 'deb https://repo.zabbix.com/zabbix/6.0/ubuntu focal main'
+    state: present
+- name: Обновить кэш apt
+  apt:
+    update_cache: yes
+- name: Установка пакетов, необходимых для Zabbix
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - apache2
+    - php
+    - php-mysql
+    - php-gd
+    - php-xml
+    - php-bcmath
+    - php-mbstring
+    - php-ldap
+    - php-xmlrpc
+    - mysql-server
+    - mysql-client
+    - zabbix-server-mysql
+    - zabbix-frontend-php
+    - zabbix-apache-conf
+    - zabbix-sql-scripts
+    - python3-mysqldb
+- name: Запуск и включение служб
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  with_items:
+    - apache2
+    - mysql
+    - zabbix-server
+- name: Создание базы данных
+  mysql_db:
+    name: zabbix
+    state: present
+    login_user: root
+    login_password: "{{ root_pass }}"
+    encoding: utf8
+    collation: utf8_bin
+- name: Создать пользователя Zabbix
+  mysql_user:
+    name: zabbix
+    password: zabbix
+    priv: "*.*:ALL"
+    host: "%"
+    login_user: root
+    login_password: "{{ root_pass }}"
+- name: Загрузка схемы базы данных Zabbix
+  mysql_db:
+    name: zabbix
+    state: import
+    target: /usr/share/zabbix-sql-scripts/mysql/server.sql.gz
+    login_user: root
+    login_password: "{{ root_pass }}"
+    force: true
+  register: import_result
+- name: Вывод результата импорта базы данных
+  debug:
+    msg: "Результат импорта базы данных: {{ import_result }}"
+- name: Конфигурация сервера
+  block:
+    - name: ListenPort
+      lineinfile:
+        path: /etc/zabbix/zabbix_server.conf
+        regexp: '^# ListenPort='
+        line: 'ListenPort=10051'
+    - name: DBPassword
+      lineinfile:
+        path: /etc/zabbix/zabbix_server.conf
+        regexp: '^# DBPassword='
+        line: 'DBPassword={{ zabbix_pass }}'
+    - name: post_max_size
+      lineinfile:
+        path: /etc/php/7.4/apache2/php.ini
+        regexp: '^post_max_size = '
+        line: 'post_max_size = 16M'
+    - name: max_execution_time
+      lineinfile:
+        path: /etc/php/7.4/apache2/php.ini
+        regexp: '^max_execution_time = '
+        line: 'max_execution_time = 300'
+    - name: max_input_time
+      lineinfile:
+        path: /etc/php/7.4/apache2/php.ini
+        regexp: '^max_input_time = '
+        line: 'max_input_time = 300'
+    - name: date.timezone
+      lineinfile:
+        path: /etc/php/7.4/apache2/php.ini
+        regexp: '^;?date.timezone = '
+        line: 'date.timezone = "Europe/Moscow"'
+- name: Конфигурация apache2
+  template:
+    src: default.j2
+    dest: /etc/apache2/sites-available/000-default.conf
+    mode: "644"
+- name: Перезагрузка
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - apache2
+    - mysql
+    - zabbix-server

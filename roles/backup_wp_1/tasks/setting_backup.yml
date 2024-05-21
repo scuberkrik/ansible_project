@@ -1,0 +1,20 @@
+---
+- name: Get backup script
+  ansible.builtin.template:
+    src: backup_wp_1.sh.j2
+    dest: /root/backup_wp_1.sh
+    mode: '0755'
+
+- name: Creates cron task
+  ansible.builtin.cron:
+    name: backup wp
+    minute: "5"
+    hour: "5"
+    user: root
+    job: "/root/backup_wp_1.sh"
+
+- name: Сreate directory for archives
+  ansible.builtin.file:
+    path: /root/backup_wp_1
+    state: directory
+    mode: '0755'

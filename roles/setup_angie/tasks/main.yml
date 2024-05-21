@@ -1,0 +1,67 @@
+---
+# tasks file for setup_angie
+- name: Setup Angie by teamplate
+  ansible.legacy.template:
+    src: "cloudcraft-crew.su.conf.j2"
+    dest: "/etc/angie/http.d/cloudcraft-crew.su.conf"
+    owner: angie
+    group: angie
+
+- name: Add lines to angie.conf to main part
+  ansible.builtin.blockinfile:
+    path: /etc/angie/angie.conf
+    marker: "##### {mark} insert modules"
+    insertafter: '^pid.*'
+    block: |
+      load_module               modules/ngx_http_brotli_filter_module.so;
+      load_module               modules/ngx_http_brotli_static_module.so;
+      load_module               modules/ngx_http_js_module.so;
+      load_module               modules/ngx_stream_js_module.so;
+
+- name: add lines to angie.conf to http part
+  ansible.builtin.blockinfile:
+    path: /etc/angie/angie.conf
+    marker: "##### {mark} addition setings"
+    insertafter: '^(.*)keepalive_timeout.*'
+    block: |
+      proxy_connect_timeout     10s;
+      keepalive_requests        100000;
+      ssl_dhparam               /etc/ssl/dhparams.pem;
+      ssl_session_timeout       1d;
+      ssl_session_cache         shared:MozSSL:10m;
+      ssl_session_tickets       on;
+      ssl_early_data            on;
+      brotli                    on;
+      brotli_static             on;
+
+- name: Copy cert generator
+  ansible.builtin.copy:
+    src: files/create_certs.sh
+    dest: /etc/ssl/create_certs.sh
+    owner: root
+    mode: '0777'
+
+- name: Copy favicon
+  ansible.builtin.copy:
+    src: files/favicon.ico
+    dest: /usr/share/angie/html/avicon.ico
+    owner: root
+    mode: '0644'
+
+- name: Generate DH-params
+  community.crypto.openssl_dhparam:
+    path: /etc/ssl/dhparams.pem
+
+- name: check if certs exists
+  ansible.builtin.stat:
+    path: /etc/letsencrypt/live/monitoring.cloudcraft-crew.su/privkey.pem
+  register: file_exists
+
+- name: Generate certs
+  ansible.legacy.command: /etc/ssl/create_certs.sh "{{ item }}" www."{{ item }}"
+  when: not file_exists.stat.exists
+  with_items:
+    - "{{ main_url }}"
+    - "{{ monitoring_url }}"
+  register: my_output
+  changed_when: my_output.rc != 0

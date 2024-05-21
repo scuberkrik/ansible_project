@@ -1,0 +1,50 @@
+# Это playbook.
+# Сюда просто добавляем роли.
+# Пример заполнения:
+# - hosts: all
+#   roles:
+#     - some_role
+---
+- name: Install Basic Packages
+  hosts: all
+  roles:
+    - basic_packages
+    - conf_agent
+
+- name: Install ssh keys
+  hosts: apps
+  roles:
+    - ssh_keys
+
+- name: Install wordpress and synch him
+  hosts: apps
+  roles:
+    - wp
+    - synch
+
+- name: Backup wordpress
+  hosts: wp-1-node
+  roles:
+    - backup_wp_1
+
+- name: Install and setup balancer
+  hosts: balancer
+  roles:
+    - { role: install-angie, tags: [install_balancer]}
+    - { role: setup_angie, tags: [setup_loadbalancer]}
+
+- name: Install mysql and backup him
+  hosts: db-node
+  roles:
+    - mysql
+    - backup_db
+
+- name: Install zabbix
+  hosts: monitoring
+  roles:
+    - zabbix
+
+- name: configuring iptables rules
+  hosts: all
+  roles:
+    - iptables

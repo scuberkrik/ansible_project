@@ -1,0 +1,46 @@
+---
+stages:
+  - verify
+  - testing
+  - deploy
+
+## prepare for plays
+before_script:
+  - ansible --version
+  - ansible-lint --version
+
+## verify syntax each push
+ansible-verify:
+  only:
+    - pushes
+  stage: verify
+  tags:
+    - ansible-server
+  script:
+    - ansible-lint -v *.yml
+    - ansible-playbook --syntax-check *.yml
+  allow_failure: true
+
+## test playbook on test inventory with $TEST_INVENTORY group var
+testing:
+  only:
+    - pushes
+  stage: testing
+  tags:
+    - ansible-server
+  script:
+    - ansible-playbook --inventory inventory/test.yml -e "@./vars/main-test.yml" playbook.yml
+
+### deploy playbook with manual run
+deploy:
+  stage: deploy
+  tags:
+    - ansible-server
+  script:
+    - ansible-playbook -e "@./vars/main.yml" playbook.yml
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    - when: never

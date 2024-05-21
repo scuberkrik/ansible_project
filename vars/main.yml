@@ -1,0 +1,84 @@
+---
+ansible_user: ""
+ansible_pass: ""
+
+########################             Адреса хостов            #############################
+
+###########################################################################################
+wp1_host: "10.0.0.25"
+wp2_host: "10.0.0.4"
+db_host: "10.0.1.16"
+balancer_host: "10.0.0.12"
+monitoring_host: "10.0.0.8"
+runner: "10.0.0.7"
+main_url:        "cloudcraft-crew.su"
+monitoring_url:  "monitoring.cloudcraft-crew.su"
+
+########################     ПЕРЕМЕННЫЕ ДЛЯ РОЛИ ssh_keys     #############################
+
+###########################################################################################
+#      Укажите удаленного пользователя для генерации и получения публичного ключа 
+#      (после генерации ключи будут находиться в директории роли в папке keys)
+###########################################################################################
+ssh_remote_user_fetch: "root"
+
+###########################################################################################
+#      Укажите путь к файлу публичного ключа.
+#      В данном примере будут добавляться ключи для серверов приложений WP, для
+#      добавления ключей для других хостов, не забудте указать их в плейбуке!
+###########################################################################################
+ssh_user1_key: "{{ lookup('file', '/var/lib/gitlab-runner/builds/o_Tzy-yA/0/cloudcraft-crew/project_gb/roles/ssh_keys/keys/wp-1-node/root/.ssh/id_rsa.pub') }}"
+ssh_user2_key: "{{ lookup('file', '/var/lib/gitlab-runner/builds/o_Tzy-yA/0/cloudcraft-crew/project_gb/roles/ssh_keys/keys/wp-2-node/root/.ssh/id_rsa.pub') }}"
+ssh_user3_key:
+ssh_user4_key:
+ssh_user5_key:
+
+###########################################################################################
+#      Укажите удаленного пользователя для которого будет добавлен публичный ключ
+###########################################################################################
+ssh_remote_user_add: "root"
+
+###########################################################################################
+#      Для удаления ключей укажите тег "rm" (ansible-playbook playbook.yml --tags rm)
+###########################################################################################
+
+
+########################       ПЕРЕМЕННЫЕ для wp и mysql      #############################
+
+###########################################################################################
+
+wp_version: "6.4.3"
+wp_download_url: "https://ru.wordpress.org/wordpress-{{ wp_version }}-ru_RU.tar.gz"
+wp_install_dir: "/var/www/html"
+wp_db_host: "10.0.1.16"
+wp_db_name: "wp"
+wp_db_user: "wp"
+wp_db_password: "wp"
+
+# MySQL
+root_password: myr00tpa$$
+admin_user: mysqladmin
+admin_password: myadmPa$$
+
+# Bot for alerting backup
+bot_token: "6465762459:AAE1NVbQxkQZzfj8Jggml6ioPvvFSk71sOY"
+chat_id: "-4043193718"
+
+# Backup DB
+s3_bucket: "backup_db_bucket"
+s3_endpoint: "https://hb.bizmrg.com"
+bucket_key: "mn84StgLWkX3EKRYDS1pGP"
+bucket_secret: "gq5jvGmry7Jx916wYSRDzr2WzfQaZyVr3YMhG2FGxKR7"
+
+# Backup WP-1
+s3_bucket_wp: "backup_wp_bucket"
+s3_endpoint_wp: "https://hb.bizmrg.com"
+bucket_key_wp: "5yQ9yDoJT6i6gmQB7aAy4n"
+bucket_secret_wp: "6vcfV4oJJLdUQq4ZwDG1rWSRBCXGS6Lz4rUzy3TteaXa"
+
+
+##########################     ПЕРЕМЕННЫЕ ДЛЯ РОЛИ zabbix   ################################
+root_pass: "root-1234"
+zabbix_pass: "zabbix"
+zabbix_mysql_usrer: "zbx_monitor"
+zabbix_mysql_password: "zbx_monitor"

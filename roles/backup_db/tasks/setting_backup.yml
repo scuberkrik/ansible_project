@@ -1,0 +1,14 @@
+---
+- name: Get backup script
+  ansible.builtin.template:
+    src: backup_db.sh.j2
+    dest: /root/backup_db.sh
+    mode: '0755'
+
+- name: Creates cron task
+  ansible.builtin.cron:
+    name: backup db
+    minute: "0"
+    hour: "5"
+    user: root
+    job: "/root/backup_db.sh"

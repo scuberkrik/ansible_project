@@ -1,0 +1,8 @@
+---
+# vars file for setup_angie
+wp1_host: "10.0.0.25"
+wp2_host: "10.0.0.4"
+monitoring_host: "10.0.0.8"
+
+main_url:        "cloudcraft-crew.su"
+monitoring_url:  "monitoring.cloudcraft-crew.su"

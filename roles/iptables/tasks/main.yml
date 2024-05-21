@@ -1,0 +1,11 @@
+---
+- name: Добавление правил iptables
+  include_tasks: tasks/add.yml
+  tags:
+    - add
+- name: Удаление правил iptables
+  include_tasks: tasks/rm.yml
+  when: "'rm' in ansible_run_tags"
+  tags:
+    - rm
+

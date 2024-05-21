@@ -1,0 +1,14 @@
+[Unit]
+Description=Unison File Synchronization Service
+After=network.target
+
+[Service]
+Type=simple
+Environment=HOME=/root
+ExecStart=/bin/bash -c 'while true; do flock -n /tmp/unison_sync.lock /usr/bin/unison default; sleep 30; done'
+WorkingDirectory=/opt
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

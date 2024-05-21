@@ -1,0 +1,11 @@
+---
+- name: Удаление ssh ключей
+  authorized_key:
+    user: "{{ ssh_remote_user_add }}"
+    key: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ ssh_user1_key }}"
+    - "{{ ssh_user2_key }}"
+  tags:
+    - del

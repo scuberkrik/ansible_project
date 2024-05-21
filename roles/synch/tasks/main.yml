@@ -1,0 +1,48 @@
+---
+- name: Установка unison
+  apt:
+    name: unison
+    state: present
+- name: Создать директорию /root/.unison/
+  file:
+    path: /root/.unison/
+    state: directory
+- name: Создать директорию /var/log/unison
+  file:
+    path: /var/log/unison
+    state: directory
+    mode: "0751"
+- name: Проверка существования файла /var/log/unison/unison.log
+  stat:
+    path: /var/log/unison/unison.log
+  register: file_stat
+- name: Создание файла, если он не существует
+  file:
+    path: /var/log/unison/unison.log
+    state: touch
+    mode: "0644"
+  when: not file_stat.stat.exists
+- name: Установка прав 644 для существующего файла
+  file:
+    path: /var/log/unison/unison.log
+    mode: "0644"
+  when: file_stat.stat.exists
+- name: Добавление профиля unison
+  when: inventory_hostname == "wp-1-node"
+  template:
+    src: default.j2
+    dest: /root/.unison/default.prf
+    mode: "0644"
+- name: Добавление файла модуля
+  when: inventory_hostname == "wp-1-node"
+  template:
+    src: unison.service.j2
+    dest: /etc/systemd/system/unison.service
+    mode: "0644"
+- name: Включение службы
+  when: inventory_hostname == "wp-1-node"
+  systemd:
+    name: unison.service
+    enabled: true
+    state: started
+    daemon_reload: true

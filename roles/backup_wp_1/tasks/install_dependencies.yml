@@ -1,0 +1,38 @@
+---
+- name: Update repositories cache and install curl and unzip packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - unzip
+    state: present
+    update_cache: true
+
+- name: Get archive awscli and unarchive it
+  ansible.builtin.unarchive:
+    src: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    dest: /root/
+    remote_src: true
+
+- name: Install awscli
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      /root/aws/install
+      /usr/local/bin/aws --version
+    executable: /bin/bash
+  register: __install_awscli
+  changed_when: __install_awscli !=0
+
+- name: Create directory .aws
+  ansible.builtin.file:
+    path: /root/.aws
+    mode: "0755"
+    owner: root
+    group: root
+    state: directory
+
+- name: Get key and secret of VKCloud
+  ansible.builtin.template:
+    src: credentials.j2
+    dest: /root/.aws/credentials
+    mode: '0600'

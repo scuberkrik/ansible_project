@@ -1,0 +1,57 @@
+---
+- name: Установка пакетов
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - nginx
+    - php7.4-mysql
+    - php7.4
+    - php7.4-fpm
+- name: Загрузка WordPress
+  get_url:
+    url: "{{ wp_download_url }}"
+    dest: "/tmp/wordpress-{{ wp_version }}-ru_RU.tar.gz"
+- name: Распаковка WordPress
+  unarchive:
+    src: "/tmp/wordpress-{{ wp_version }}-ru_RU.tar.gz"
+    dest: "{{ wp_install_dir }}"
+    remote_src: true
+    owner: www-data
+    group: www-data
+- name: Настройка nginx
+  template:
+    src: default.j2
+    dest: /etc/nginx/sites-available/default
+    mode: "644"
+- name: Перезапустить nginx
+  service:
+    name: nginx
+    state: restarted
+- name: Настройка файла конфигурации
+  template:
+    src: wp-config.j2
+    dest: "{{ wp_install_dir }}/wordpress/wp-config.php"
+    owner: www-data
+    group: www-data
+    mode: "644"
+- name: Проверка существования файла /var/log/nginx/access.log
+  stat:
+    path: /var/log/nginx/access.log
+  register: file_stat
+- name: Создание файла, если он не существует
+  file:
+    path: /var/log/nginx/access.log
+    state: touch
+    mode: "644"
+  when: not file_stat.stat.exists
+- name: Установка прав 644 для существующего файла
+  file:
+    path: /var/log/nginx/access.log
+    mode: "644"
+  when: file_stat.stat.exists
+- name: logrotate
+  lineinfile:
+    path: /etc/logrotate.d/nginx
+    regexp: '^(\s*create\s+)0640'
+    line: '        create 0644 www-data adm'

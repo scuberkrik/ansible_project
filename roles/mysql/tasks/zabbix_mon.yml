@@ -1,0 +1,32 @@
+---
+### Zabbix для MySQL
+- name: Создаём пользователя zbx_monitor
+  mysql_user:
+    name: "{{ zabbix_mysql_usrer }}"
+    password: "{{ zabbix_mysql_password }}"
+    priv: '*.*:REPLICATION CLIENT,PROCESS,SHOW DATABASES,SHOW VIEW'
+    host: '%'
+    append_privs: yes
+    login_user: root
+    login_password: "{{ root_password }}"
+    state: present
+
+- name: Копируем template_db_mysql.conf
+  copy:
+    src: template_db_mysql.conf
+    dest: "/etc/zabbix/zabbix_agentd.conf.d/"
+
+- name: Создаём папку /var/lib/zabbix
+  file:
+    path: /var/lib/zabbix
+    state: directory
+
+- name: Копируем .my.cnf
+  copy:
+    src: .my.cnf
+    dest: "/var/lib/zabbix/.my.cnf"
+
+- name: Перезагрузка zabbix-agent
+  service:
+    name: zabbix-agent2
+    state: restarted

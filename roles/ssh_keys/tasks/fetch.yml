@@ -1,0 +1,16 @@
+---
+- name: Проверить наличие SSH-ключа
+  ansible.builtin.stat:
+    path: "~/.ssh/id_rsa.pub"
+  register: ssh_key_status
+- name: Сгенерировать пару SSH-ключей, если их нет
+  ansible.builtin.openssh_keypair:
+    path: "~/.ssh/id_rsa.pub"
+    state: present
+  when: not ssh_key_status.stat.exists
+- name: Получение SSH-ключей
+  fetch:
+    src: "~/.ssh/id_rsa.pub"
+    dest: "/var/lib/gitlab-runner/builds/o_Tzy-yA/0/cloudcraft-crew/project_gb/roles/ssh_keys/keys"
+  tags:
+    - fetch

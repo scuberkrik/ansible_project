@@ -1,0 +1,47 @@
+---
+- name: Конфигурация заббикс агента
+  when: inventory_hostname != 'db-node'
+  block:
+    - name: server
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '^Server=127.0.0.1'
+        line: 'Server=10.0.0.8'
+    - name: ServerActive
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '^ServerActive=127.0.0.1'
+        line: 'ServerActive=10.0.0.8'
+    - name: hostname
+      lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '^Hostname=Zabbix server'
+        line: 'Hostname={{ ansible_hostname }}'
+- name: Конфигурация заббикс агента2 на db-node
+  when: inventory_hostname == 'db-node'
+  block:
+    - name: server
+      lineinfile:
+        path: /etc/zabbix/zabbix_agent2.conf
+        regexp: '^Server=127.0.0.1'
+        line: 'Server=10.0.0.8'
+    - name: ServerActive
+      lineinfile:
+        path: /etc/zabbix/zabbix_agent2.conf
+        regexp: '^ServerActive=127.0.0.1'
+        line: 'ServerActive=10.0.0.8'
+    - name: hostname
+      lineinfile:
+        path: /etc/zabbix/zabbix_agent2.conf
+        regexp: '^Hostname=Zabbix server'
+        line: 'Hostname={{ ansible_hostname }}'
+- name: Перезагрузка агента
+  when: inventory_hostname != 'db-node'
+  service:
+    name: zabbix-agent
+    state: restarted
+- name: Перезагрузка агента2
+  when: inventory_hostname == 'db-node'
+  service:
+    name: zabbix-agent2
+    state: restarted

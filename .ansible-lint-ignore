@@ -1,0 +1,11 @@
+# This file contains ignores rule violations for ansible-lint
+roles/backup_db/meta/main.yml schema[meta]
+roles/backup_db/meta/main.yml meta-incorrect
+roles/backup_db/meta/main.yml meta-no-info
+roles/basic_packages/meta/main.yml meta-no-info
+roles/iptables/meta/main.yml meta-no-info
+roles/mysql/meta/main.yml meta-no-info
+roles/nginx/meta/main.yml meta-no-info
+roles/ssh_keys/meta/main.yml meta-no-info
+roles/template-role/meta/main.yml meta-no-info
+roles/wp/meta/main.yml meta-no-info

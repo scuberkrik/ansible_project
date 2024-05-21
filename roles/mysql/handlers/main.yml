@@ -1,0 +1,7 @@
+---
+# handlers file for roles/template-role
+
+- name: restart mysql
+  service:
+    name: mysql
+    state: restarted

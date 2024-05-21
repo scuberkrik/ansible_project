@@ -1,0 +1,7 @@
+---
+# tasks file for roles/backup_db
+- name: Install dependencies
+  ansible.builtin.include_tasks: roles/backup_db/tasks/install_dependencies.yml
+
+- name: Setting backup
+  ansible.builtin.include_tasks: roles/backup_db/tasks/setting_backup.yml

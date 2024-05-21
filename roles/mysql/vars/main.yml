@@ -1,0 +1,9 @@
+---
+# vars file for roles/template-role
+
+root_password: myr00tpa$$
+admin_user: mysqladmin
+admin_password: myadmPa$$
+wp_db_name: wp
+wp_db_user: wp
+wp_db_password: wp

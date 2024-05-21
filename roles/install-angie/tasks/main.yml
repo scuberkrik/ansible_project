@@ -1,0 +1,51 @@
+---
+# tasks file for install-angie
+- name: Upgrade the OS
+  ansible.builtin.apt:
+    upgrade: dist
+
+- name: Update cash
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install packages for repo's key
+  ansible.builtin.apt:
+    pkg:
+      - ca-certificates
+      - curl
+      - lsb-release
+    update_cache: true
+
+- name: Download repo's key
+  # apt_key:
+  #   url: https://angie.software/keys/angie-signing.gpg
+  #   keyring: /etc/apt/trusted.gpg.d/angie-signing.gpg
+  ansible.builtin.get_url:
+    url: https://angie.software/keys/angie-signing.gpg
+    dest: /etc/apt/trusted.gpg.d/angie-signing.gpg
+    mode: "0644"
+
+- name: Add repo's key
+#  ansible.builtin.shell:
+#    cmd: |
+#      set -o pipefail
+#      echo "deb https://download.angie.software/angie/ubuntu/ `lsb_release -cs` main" | tee /etc/apt/sources.list.d/angie.list > /dev/null
+#    executable: /bin/bash
+#    register: my_output
+#    changed_when: my_output.rc != 0
+  ansible.legacy.shell: echo "deb https://download.angie.software/angie/ubuntu/ `lsb_release -cs` main" > /etc/apt/sources.list.d/angie.list
+  register: my_output
+  changed_when: my_output.rc != 0
+
+- name: Reupdate cash
+  ansible.legacy.apt:
+    update_cache: true
+
+- name: Install ANGIE
+  ansible.legacy.apt:
+    name:
+      - angie
+      - angie-module-njs
+      - angie-module-brotli
+      - angie-console-light
+    state: "present"

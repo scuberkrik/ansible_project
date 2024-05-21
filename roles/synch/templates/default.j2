@@ -1,0 +1,10 @@
+root = /var/www/html/wordpress
+root = ssh://{{ wp2_host }}///var/www/html/wordpress
+logfile=/var/log/unison/unison.log
+ignore = Name {.DS_Store}
+ignore = Path logs
+auto = true
+batch = true
+owner = true
+perms = 0
+
